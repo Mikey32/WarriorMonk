@@ -16,6 +16,7 @@ class ActivityDB:
 
         # Create the table if it doesn't exist
         #boolean is not a legit SQLite data type. Using it here for readability or in case of a future transition to something else.
+        # Daily Activiites Table
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS activities (
                 date TEXT PRIMARY KEY,
@@ -31,35 +32,34 @@ class ActivityDB:
                 mobility BOOLEAN                           
                 )
                 """)
+        
+        # Metric Types Table
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS MetricTypes (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                unit TEXT       
+                )                     
+             """)
+
+        # Performance Metrics Trable
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS PerformanceMetrics(
+                id INTEGER PRIMARY KEY,
+                date TEXT,
+                value(REAL)         
+                )
+                """)
+
         self.conn.commit()
-
-
 """
 import sqlite3
 from pathlib import Path
 
 class HealthDB:
-    def __init__(self, db_path="health.db"):
-        self.conn = sqlite3.connect(db_path)
-        self.cur = self.conn.cursor()
-        self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS daily_metrics (
-                date TEXT PRIMARY KEY,
-                steps INTEGER,
-                sleep_hours REAL,
-                calories INTEGER,
-                mood TEXT,
-                notes TEXT
-            )
-        """)
-        self.conn.commit()
 
-    def save_day(self, date, steps, sleep_hours, calories, mood, notes=""):
-        self.cur.execute("""
-            REPLACE INTO daily_metrics (date, steps, sleep_hours, calories, mood, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (date, steps, sleep_hours, calories, mood, notes))
-        self.conn.commit()
+
+   
 
     def get_day(self, date):
         self.cur.execute("SELECT * FROM daily_metrics WHERE date=?", (date,))
