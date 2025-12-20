@@ -20,7 +20,7 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS activities (
                 date TEXT PRIMARY KEY,
-                sleep BOOLEAN,
+                sleep TEXT,
                 resistance BOOLEAN,
                 steps INTEGER,
                 sauna BOOLEAN,
@@ -47,11 +47,21 @@ class ActivityDB:
             CREATE TABLE IF NOT EXISTS PerformanceMetrics(
                 id INTEGER PRIMARY KEY,
                 date TEXT,
-                value(REAL)         
+                value REAL         
+                )
+                """)
+        
+        #User Data
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS UserData(
+                name TEXT             
                 )
                 """)
 
         self.conn.commit()
+
+def close(self):
+    self.conn.close()
 """
 import sqlite3
 from pathlib import Path
