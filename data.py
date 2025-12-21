@@ -57,6 +57,37 @@ class ActivityDB:
                 name TEXT             
                 )
                 """)
+        
+        #Attributes
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS Atributes(
+                attrib_number INTEGER PRIMARY KEY,
+                name TEXT UNIQUE      
+                )
+                """)
+        """Metric_based: Strength, Endurance, Agility
+           Behavior_based: Disciplinie, Focus
+           Hybrid: Constitution, Vitality, Dexterity"""
+
+        self.conn.commit()
+
+         #Levels
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS Atributes(
+                level_number INTEGER PRIMARY KEY,
+                name TEXT UNIQUE            
+                )
+                """)
+        """1. Initiate
+           2. Disciple
+           3. Strider
+           4. Adept
+           5. Guardian
+           6. Ascetic
+           7. Sentinel
+           8. Master
+           9. Vanguard
+           10. Vanguard Prime"""
 
         self.conn.commit()
 

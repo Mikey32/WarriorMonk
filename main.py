@@ -12,18 +12,17 @@ def have(condition):
     else:
         return "have not"
 
-def greet_user(activity, today):
-    print("Good Morning " + str(activity.name) + ". Today is " + str(today))
+def greet_user(activity):
     print("1. Last nights sleep was " + activity.sleep)
     print("2. Today you have  " + have(activity.resistance) + " resistance training")
     print("3. You have walked "+ str(activity.steps) +" steps.")
-    print("3. You have "+ have(activity.sauna) + " sauna.")
-    print("4. You have " + have(activity.cold_plunge) + " cold plunged.")
-    print("5. You have " + have(activity.sprint) + " sprinted")
-    print("6. You have done " + str(activity.zone2cardio) + " minutes of zone 2 cardio.")
-    print("7. You meditated for "+ str(activity.meditation) +" minutes.")
-    print("8. You have " + have(activity.core) + "core work.")
-    print("9. You have " + have(activity.mobility) + "mobility work.")
+    print("4. You have "+ have(activity.sauna) + " sauna.")
+    print("5. You have " + have(activity.cold_plunge) + " cold plunged.")
+    print("6. You have " + have(activity.sprint) + " sprinted")
+    print("7. You have done " + str(activity.zone2cardio) + " minutes of zone 2 cardio.")
+    print("8. You meditated for "+ str(activity.meditation) +" minutes.")
+    print("9. You have " + have(activity.hiit) + "HIIT workout.")
+    print("10. You have " + have(activity.mobility) + "mobility work.")
     print("0. You can exit gracefully")
 
 
@@ -55,7 +54,7 @@ def main():
     "sprint": False,
     "zone2cardio": 0,
     "meditation": 0,
-    "core": False,
+    "hiit": 0,
     "mobility": False
     }   
 
@@ -65,33 +64,15 @@ def main():
     row = db.cur.fetchone()
 
     activity = ActivityRow.from_sqlite_row(row, default_values)
-    
+    print("Good Morning " + name + ". Today is " + str(today))    
 
     userNumber = input(greet_user(activity, today))
-    """
-    print("Good Morning " + str(name) + ". Today is " + str(today))
-    print("1. Last nights sleep was " + sleep)
-    print("2. Today you have  " + have(resistance) + " resistance training")
-    print("3. You have walked "+ str(steps) +" steps.")
-    print("3. You have "+ have(sauna) + " sauna.")
-    print("4. You have " + have(cold_plunge) + " cold plunged.")
-    print("5. You have " + have(sprint) + " sprinted")
-    print("6. You have done " + str(zone2cardio) + " minutes of zone 2 cardio.")
-    print("7. You meditated for "+ str(meditation) +" minutes.")
-    print("8. You have " + have(core) + "core work.")
-    print("9. You have " + have(mobility) + "mobility work.")
-    print("0. You can exit gracefully")
-    """
-   # userNumber = input()
+    
     
     while userNumber > 0:
-        match userNumber:
-            case "1":
-                modify_sleep(today)
-            case "2":
-                modify_resistance(today)
-            case "3":
-                modify_steps(today)
+        modify_activity(userNumber, today)
+        userNumber = input(greet_user(activity, today))
+        
     print("Closing...")
     db.close()
     sys.exit(0)
