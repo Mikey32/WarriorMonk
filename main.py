@@ -64,9 +64,9 @@ def main():
     row = db.cur.fetchone()
 
     activity = ActivityRow.from_sqlite_row(row, default_values)
-    print("Good Morning " + name + ". Today is " + str(today))    
+    print("Good Morning " + str(name) + ". Today is " + str(today))    
 
-    userNumber = input(greet_user(activity, today))
+    userNumber = input(greet_user(activity))
     
     
     while userNumber > 0:

@@ -28,7 +28,7 @@ class ActivityDB:
                 sprint BOOLEAN,
                 zone2cardio INTEGER,
                 meditation INTEGER,
-                core BOOLEAN,
+                hiit INTEGER,
                 mobility BOOLEAN                           
                 )
                 """)
@@ -75,10 +75,11 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS Atributes(
                 level_number INTEGER PRIMARY KEY,
-                name TEXT UNIQUE            
+                name TEXT UNIQUE,
                 )
                 """)
-        """1. Initiate
+        """0. Unready / Unlearned
+           1. Initiate
            2. Disciple
            3. Strider
            4. Adept

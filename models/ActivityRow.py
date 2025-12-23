@@ -11,7 +11,7 @@ class ActivityRow:
     sprint: bool = False
     zone2cardio: bool = False
     meditation: bool = False
-    core: bool = False
+    hiit: int = 0
     mobility: bool = False
 
     @classmethod
@@ -31,7 +31,7 @@ class ActivityRow:
                 sprint=bool(row[6]),
                 zone2cardio=bool(row[7]),
                 meditation=bool(row[8]),
-                core=bool(row[9]),
+                hiit=row[9],
                 mobility=bool(row[10]),
             )
         elif default_values:
