@@ -24,10 +24,12 @@ def greet_user(activity):
     print("9. You have " + have(activity.hiit) + "HIIT workout.")
     print("10. You have " + have(activity.mobility) + "mobility work.")
     print("0. You can exit gracefully")
+    userInput = input("Please enter your choice.")
+    return userInput
 
 
 def main():
-    db = ActivityDB()
+    
     #Check if this is the first time running the program? If it is we need to set up the user database.
     db.cur.execute("SELECT COUNT(*) from UserData")
     count = db.cur.fetchone()[0]
@@ -37,8 +39,8 @@ def main():
         db.cur.execute("INSERT INTO UserData (name) VALUES (?)", (name,))
         db.conn.commit()
     else:
-        name = db.cur.execute("SELECT name from UserData WHERE 1=1")
-
+        db.cur.execute("SELECT name from UserData WHERE 1=1")
+        name = db.cur.fetchone()[0]
 
     #Display current date and what has been accomplished.
     #Set values
@@ -66,20 +68,20 @@ def main():
     activity = ActivityRow.from_sqlite_row(row, default_values)
     print("Good Morning " + str(name) + ". Today is " + str(today))    
 
-    userNumber = input(greet_user(activity))
+    userNumber = greet_user(activity)
     
     
-    while userNumber > 0:
+    while int(userNumber) > 0:
         modify_activity(userNumber, today)
-        userNumber = input(greet_user(activity, today))
+       #userNumber = input(greet_user(activity))
         
     print("Closing...")
-    db.close()
     sys.exit(0)
+    db.close()
     
-
-
+    
 
 
 if __name__ == "__main__":
+    db = ActivityDB()
     main()

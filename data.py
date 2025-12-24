@@ -19,7 +19,7 @@ class ActivityDB:
         # Daily Activiites Table
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS activities (
-                date TEXT PRIMARY KEY,
+                date_val TEXT PRIMARY KEY,
                 sleep TEXT,
                 resistance BOOLEAN,
                 steps INTEGER,
@@ -46,7 +46,7 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS PerformanceMetrics(
                 id INTEGER PRIMARY KEY,
-                date TEXT,
+                date_val TEXT,
                 value REAL         
                 )
                 """)
@@ -73,9 +73,9 @@ class ActivityDB:
 
          #Levels
         self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS Atributes(
+            CREATE TABLE IF NOT EXISTS Levels(
                 level_number INTEGER PRIMARY KEY,
-                name TEXT UNIQUE,
+                name TEXT UNIQUE
                 )
                 """)
         """0. Unready / Unlearned
@@ -94,23 +94,3 @@ class ActivityDB:
 
 def close(self):
     self.conn.close()
-"""
-import sqlite3
-from pathlib import Path
-
-class HealthDB:
-
-
-   
-
-    def get_day(self, date):
-        self.cur.execute("SELECT * FROM daily_metrics WHERE date=?", (date,))
-        return self.cur.fetchone()
-
-    def get_all(self):
-        self.cur.execute("SELECT * FROM daily_metrics ORDER BY date")
-        return self.cur.fetchall()
-
-    def close(self):
-        self.conn.close()
-        """
