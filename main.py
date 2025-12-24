@@ -11,20 +11,21 @@ def have(condition):
         return "have"
     else:
         return "have not"
+    
 
 def greet_user(activity):
-    print("1. Last nights sleep was " + activity.sleep)
-    print("2. Today you have  " + have(activity.resistance) + " resistance training")
+    print("1. Last nights' sleep was " + str(activity.sleep))
+    print("2. Today you " + have(activity.resistance) + " done resistance training.")
     print("3. You have walked "+ str(activity.steps) +" steps.")
-    print("4. You have "+ have(activity.sauna) + " sauna.")
-    print("5. You have " + have(activity.cold_plunge) + " cold plunged.")
-    print("6. You have " + have(activity.sprint) + " sprinted")
+    print("4. You "+ have(activity.sauna) + " done sauna.")
+    print("5. You " + have(activity.cold_plunge) + " cold plunged.")
+    print("6. You " + have(activity.sprint) + " sprinted")
     print("7. You have done " + str(activity.zone2cardio) + " minutes of zone 2 cardio.")
     print("8. You meditated for "+ str(activity.meditation) +" minutes.")
-    print("9. You have " + have(activity.hiit) + "HIIT workout.")
-    print("10. You have " + have(activity.mobility) + "mobility work.")
-    print("0. You can exit gracefully")
-    userInput = input("Please enter your choice.")
+    print("9. You have performed " + str(activity.hiit) + " minutes of a HIIT workout.")
+    print("10. You " + have(activity.mobility) + " done mobility work.")
+    print("0. You can exit gracefully.")
+    userInput = input("Please enter your choice: ")
     return userInput
 
 
@@ -48,7 +49,7 @@ def main():
     
     default_values = {
     "date_val": today,
-    "sleep": "Unknown",
+    "sleep": "unknown",
     "resistance": False,
     "steps": 0,
     "sauna": False,
@@ -62,10 +63,15 @@ def main():
 
     
     # Check if today's date exists in the database:
-    db.cur.execute("SELECT * FROM activities WHERE date = ?", (today,))
+    db.cur.execute("SELECT * FROM Activities WHERE date_val = ?", (today,))
     row = db.cur.fetchone()
 
-    activity = ActivityRow.from_sqlite_row(row, default_values)
+    if row is None:
+        activity = ActivityRow.from_sqlite_row(row, default_values)
+        db.insert_activity(activity)
+    else:
+        activity = ActivityRow.from_sqlite_row(row, default_values)
+
     print("Good Morning " + str(name) + ". Today is " + str(today))    
 
     userNumber = greet_user(activity)
@@ -73,6 +79,8 @@ def main():
     
     while int(userNumber) > 0:
         modify_activity(userNumber, today)
+        activity = db.get_activity(today)
+        userNumber = greet_user(activity)
        #userNumber = input(greet_user(activity))
         
     print("Closing...")

@@ -1,6 +1,6 @@
 import sqlite3
 from pathlib import Path 
-
+from models.ActivityRow import ActivityRow
 
 class ActivityDB:
     def __init__(self, db_name="activity.db"):
@@ -18,7 +18,7 @@ class ActivityDB:
         #boolean is not a legit SQLite data type. Using it here for readability or in case of a future transition to something else.
         # Daily Activiites Table
         self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS activities (
+            CREATE TABLE IF NOT EXISTS Activities (
                 date_val TEXT PRIMARY KEY,
                 sleep TEXT,
                 resistance BOOLEAN,
@@ -54,13 +54,14 @@ class ActivityDB:
         #User Data
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS UserData(
-                name TEXT             
+                name TEXT,
+                level INTEGER             
                 )
                 """)
         
         #Attributes
         self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS Atributes(
+            CREATE TABLE IF NOT EXISTS Attributes(
                 attrib_number INTEGER PRIMARY KEY,
                 name TEXT UNIQUE      
                 )
@@ -75,22 +76,66 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS Levels(
                 level_number INTEGER PRIMARY KEY,
-                name TEXT UNIQUE
+                name TEXT UNIQUE,
+                point_threshold INTEGER
                 )
                 """)
-        """0. Unready / Unlearned
-           1. Initiate
-           2. Disciple
-           3. Strider
-           4. Adept
-           5. Guardian
-           6. Ascetic
-           7. Sentinel
-           8. Master
-           9. Vanguard
-           10. Vanguard Prime"""
+        """0. Unready / Unlearned 0
+           1. Initiate 100
+           2. Disciple 500
+           3. Strider 1500
+           4. Adept 5000
+           5. Guardian 10000
+           6. Ascetic 25000
+           7. Sentinel 40000
+           8. Master 60000
+           9. Vanguard 90000
+           10. Vanguard Prime 200000"""
 
         self.conn.commit()
+    def insert_activity(self, activity: ActivityRow):
+        self.cur.execute(f"""
+            INSERT INTO Activities ({", ".join(ActivityRow.columns())})
+            VALUES ({", ".join(["?"] * len(ActivityRow.columns()))})
+        """, activity.to_tuple())
+
+        self.conn.commit()
+    def get_activity(self, date_val):
+        self.cur.execute("SELECT * FROM Activities WHERE date_val = ?", (date_val,))
+        row = self.cur.fetchone()
+        return ActivityRow.from_sqlite_row(row)
+    
+    def seed_standard_tables(self):
+        """Populate tables like Levels if they are empty."""
+
+        # Seed Levels table
+        levels = [
+            (0, "Unready", 0),
+            (1, "Initiate", 100),
+            (2, "Disciple", 500),
+            (3, "Strider", 1500),
+            (4, "Adept", 5000),
+            (5, "Guardian", 10000),
+            (6, "Ascetic", 25000),
+            (7, "Sentinel", 40000),
+            (8, "Master", 60000),
+            (9, "Vanguard", 90000),
+            (10, "Vanguard Prime", 200000),
+        ]
+
+        # Check if table already has data
+        self.cur.execute("SELECT COUNT(*) FROM Levels")
+        count = self.cur.fetchone()[0]
+
+        if count == 0:
+            self.cur.executemany(
+                "INSERT INTO Levels (level_number, name, point_threshold) VALUES (?, ?, ?)",
+                levels
+            )
+            self.conn.commit()
+            print("Levels table populated.")
+        else:
+            print("Levels table already populated.")
 
 def close(self):
     self.conn.close()
