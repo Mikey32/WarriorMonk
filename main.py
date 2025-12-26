@@ -2,12 +2,10 @@ from data import ActivityDB
 from datetime import date
 from modify_tasks import *
 from models.ActivityRow import ActivityRow
+from models.UserData import UserData
 import sys
 import argparse
-import os
 
-print("Running file:", os.path.abspath(__file__))
-print("CWD:", os.getcwd())
 
 
 def parse_args():
@@ -39,20 +37,51 @@ def greet_user(activity):
     userInput = input("Please enter your choice: ")
     return userInput
 
+def display_level(userData):
+    updated_user, rank_title = check_for_promotion(userData)
+    print(f"You are level {updated_user.level}. Youre rank is {rank_title}.")
+
+def check_for_promotion(userData):
+    #Check level based on xp?
+    db.cur.execute("""
+                    SELECT level_number, name
+                    FROM Levels
+                    WHERE point_threshold <= (
+                        SELECT experience FROM UserData
+                        )
+                        ORDER BY point_threshold DESC
+                        LIMIT 1;
+                        """)
+    level_number, rank_title = db.cur.fetchone()
+    if level_number > userData.level:
+        print(f"Congratulations {userData.name}! Welcome to level {level_number}. Your rank is {rank_title}.")
+        db.cur.execute("""
+                       UPDATE UserData
+                       SET level = ?
+                       """, (level_number,))
+        db.conn.commit()
+        db.cur.execute("SELECT name, level, experience FROM UserData LIMIT 1")
+        userRow = db.cur.fetchone()
+        userData = UserData.from_sqlite_row(userRow)
+    return userData, rank_title
 
 def main():
     
     #Check if this is the first time running the program? If it is we need to set up the user database.
     db.cur.execute("SELECT COUNT(*) from UserData")
     count = db.cur.fetchone()[0]
+    
 
     if count < 1:
         name = input("Welcome to the beginning of your journey of becoming a world class Warrior / Monk. Please enter what you would like to be called: ")
         db.cur.execute("INSERT INTO UserData (name) VALUES (?)", (name,))
         db.conn.commit()
     else:
-        db.cur.execute("SELECT name from UserData WHERE 1=1")
-        name = db.cur.fetchone()[0]
+
+        db.cur.execute("SELECT name, level, experience FROM UserData LIMIT 1")
+        userRow = db.cur.fetchone()
+        userData = UserData.from_sqlite_row(userRow)
+        name = UserData.name
 
     #Display current date and what has been accomplished.
     #Set values
@@ -83,7 +112,9 @@ def main():
     else:
         activity = ActivityRow.from_sqlite_row(row, default_values)
 
-    print("Good Morning " + str(name) + ". Today is " + str(today))    
+    print("Good Day " + str(name) + ". Today is " + str(today))
+   
+    display_level(userData)    
 
     userNumber = greet_user(activity)
     

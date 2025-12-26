@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path 
 from models.ActivityRow import ActivityRow
+from models.UserData import UserData
 
 class ActivityDB:
     def __init__(self, db_name="activity.db"):
@@ -55,8 +56,9 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS UserData(
                 name TEXT,
-                level INTEGER,
-                experience INTEGER             
+                experience INTEGER DEFAULT 0,
+                level INTEGER DEFAULT 0,
+                last_weekly_bonus TEXT            
                 )
                 """)
         
@@ -81,17 +83,6 @@ class ActivityDB:
                 point_threshold INTEGER
                 )
                 """)
-        """0. Unready / Unlearned 0
-           1. Initiate 100
-           2. Disciple 500
-           3. Strider 1500
-           4. Adept 5000
-           5. Guardian 10000
-           6. Ascetic 25000
-           7. Sentinel 40000
-           8. Master 60000
-           9. Vanguard 90000
-           10. Vanguard Prime 200000"""
 
         self.conn.commit()
     def insert_activity(self, activity: ActivityRow):
@@ -106,6 +97,11 @@ class ActivityDB:
         row = self.cur.fetchone()
         return ActivityRow.from_sqlite_row(row)
     
+    def get_user_data(self):
+        self.cur.execute("SELECT * FROM UserData LIMIT 1")
+        row = self.cur.fetchone()
+        return UserData.from_sqlite_row(row, default_values={"name": "Unknown", "level": 1, "experience": 0})
+
     def seed_standard_tables(self):
         """Populate tables like Levels if they are empty."""
 
