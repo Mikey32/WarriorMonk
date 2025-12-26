@@ -55,7 +55,8 @@ class ActivityDB:
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS UserData(
                 name TEXT,
-                level INTEGER             
+                level INTEGER,
+                experience INTEGER             
                 )
                 """)
         
@@ -123,7 +124,18 @@ class ActivityDB:
             (10, "Vanguard Prime", 200000),
         ]
 
-        # Check if table already has data
+        attributes = [
+            (1, "Strength"),
+            (2, "Endurance"),
+            (3, "Agility"),
+            (4, "Discipline"),
+            (5, "Focus"),
+            (6, "Constitution"),
+            (7, "Vitality"),
+            (8, "Dexterity"),
+        ]
+
+        # Check if Levels table already has data
         self.cur.execute("SELECT COUNT(*) FROM Levels")
         count = self.cur.fetchone()[0]
 
@@ -136,6 +148,21 @@ class ActivityDB:
             print("Levels table populated.")
         else:
             print("Levels table already populated.")
+
+         # Check if Attributes table already has data
+        self.cur.execute("SELECT COUNT(*) FROM Attributes")
+        count = self.cur.fetchone()[0]
+
+        if count == 0:
+            self.cur.executemany(
+                "INSERT INTO Attributes (attrib_number, name) VALUES (?, ?)",
+                attributes
+            )
+            self.conn.commit()
+            print("Attributes table populated.")
+        else:
+            print("Attributes table already populated.")
+
 
 def close(self):
     self.conn.close()

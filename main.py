@@ -3,7 +3,17 @@ from datetime import date
 from modify_tasks import *
 from models.ActivityRow import ActivityRow
 import sys
+import argparse
+import os
 
+print("Running file:", os.path.abspath(__file__))
+print("CWD:", os.getcwd())
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", action="store_true", help="Populate standard tables")
+    return parser.parse_args()
 
 
 def have(condition):
@@ -14,6 +24,7 @@ def have(condition):
     
 
 def greet_user(activity):
+    print("0. You can exit gracefully.")
     print("1. Last nights' sleep was " + str(activity.sleep))
     print("2. Today you " + have(activity.resistance) + " done resistance training.")
     print("3. You have walked "+ str(activity.steps) +" steps.")
@@ -24,7 +35,7 @@ def greet_user(activity):
     print("8. You meditated for "+ str(activity.meditation) +" minutes.")
     print("9. You have performed " + str(activity.hiit) + " minutes of a HIIT workout.")
     print("10. You " + have(activity.mobility) + " done mobility work.")
-    print("0. You can exit gracefully.")
+    print("11. Change day.")
     userInput = input("Please enter your choice: ")
     return userInput
 
@@ -78,10 +89,13 @@ def main():
     
     
     while int(userNumber) > 0:
-        modify_activity(userNumber, today)
+        value = modify_activity(userNumber, today)
+        if value == 11:
+            today = input("Please enter the new day YYYY-MM-DD: ")
         activity = db.get_activity(today)
         userNumber = greet_user(activity)
-       #userNumber = input(greet_user(activity))
+
+
         
     print("Closing...")
     sys.exit(0)
@@ -92,4 +106,13 @@ def main():
 
 if __name__ == "__main__":
     db = ActivityDB()
+    args = parse_args()
+
+    if args.seed:
+        db.seed_standard_tables()
+        print("Database seeded.")
+        exit(0)
+
+    # Normal app flow continues here
+
     main()

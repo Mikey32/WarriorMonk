@@ -25,6 +25,8 @@ def modify_activity(taskNum, curdate):
                 modify_hiit(curdate)
             case "10":
                 modify_mobility(curdate)
+            case "11":
+                return 11
     
     return
 
@@ -59,6 +61,7 @@ def modify_resistance(curdate):
     else:    
         return "Invalid entry"
     db.conn.commit()
+    print("Resistance Updated!")
     return "Resistance Updated!"
 
 def modify_steps(curdate):
@@ -131,9 +134,6 @@ def modify_mobility(curdate):
         return "Invalid entry"
     db.conn.commit()
     return "Mobility Updated!"
-
-
-
 
 
 # db.cur.execute("INSERT INTO UserData (name) VALUES (?)", (name,))
