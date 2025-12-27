@@ -73,14 +73,23 @@ class ActivityDB:
            Behavior_based: Disciplinie, Focus
            Hybrid: Constitution, Vitality, Dexterity"""
 
-        self.conn.commit()
+        
 
-         #Levels
+        #Levels
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS Levels(
                 level_number INTEGER PRIMARY KEY,
                 name TEXT UNIQUE,
                 point_threshold INTEGER
+                )
+                """)
+        
+        #WeeklyBonus
+        self.cur.execute("""
+            CREATE TABLE IF NOT EXISTS WeeklyBonusStatus (
+                week_start TEXT PRIMARY KEY,
+                bonus_awarded INTEGER DEFAULT 0,
+                needs_recalc INTEGER DEFAULT 0
                 )
                 """)
 
@@ -101,7 +110,7 @@ class ActivityDB:
         self.cur.execute("SELECT * FROM UserData LIMIT 1")
         row = self.cur.fetchone()
         return UserData.from_sqlite_row(row, default_values={"name": "Unknown", "level": 1, "experience": 0})
-
+    
     def seed_standard_tables(self):
         """Populate tables like Levels if they are empty."""
 

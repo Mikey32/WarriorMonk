@@ -6,13 +6,10 @@ from models.UserData import UserData
 import sys
 import argparse
 
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", action="store_true", help="Populate standard tables")
     return parser.parse_args()
-
 
 def have(condition):
     if condition:
@@ -20,7 +17,6 @@ def have(condition):
     else:
         return "have not"
     
-
 def greet_user(activity):
     print("0. You can exit gracefully.")
     print("1. Last nights' sleep was " + str(activity.sleep))
@@ -64,6 +60,8 @@ def check_for_promotion(userData):
         userRow = db.cur.fetchone()
         userData = UserData.from_sqlite_row(userRow)
     return userData, rank_title
+
+
 
 def main():
     
@@ -117,23 +115,19 @@ def main():
     display_level(userData)    
 
     userNumber = greet_user(activity)
-    
-    
+    check_weekly = False
+        
     while int(userNumber) > 0:
-        value = modify_activity(userNumber, today)
+        value = modify_activity(userNumber, today, check_weekly)
         if value == 11:
             today = input("Please enter the new day YYYY-MM-DD: ")
+            check_weekly = True
         activity = db.get_activity(today)
         userNumber = greet_user(activity)
 
-
-        
     print("Closing...")
     sys.exit(0)
-    db.close()
-    
-    
-
+    db.close()  
 
 if __name__ == "__main__":
     db = ActivityDB()

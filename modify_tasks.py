@@ -1,9 +1,13 @@
 from data import ActivityDB
-from datetime import date
+from datetime import date, timedelta
 
 db = ActivityDB()
 
-def modify_activity(taskNum, curdate):
+def modify_activity(taskNum, curdate, check_weekly):
+
+    if check_weekly:
+        WeeklyBonus.flag_week_for_recalc(curdate)
+
     match taskNum:
             case "1":
                 modify_sleep(curdate)
@@ -27,9 +31,7 @@ def modify_activity(taskNum, curdate):
                 modify_mobility(curdate)
             case "11":
                 return 11
-    
     return
-
 
 def modify_sleep(curdate):
     answer = input("How was your sleep?(y = good, n = not good)")
@@ -43,13 +45,6 @@ def modify_sleep(curdate):
         return
     db.conn.commit()
     print("Sleep Updated!")
-    #print("DB path:", db.db_path)
-
-    #db.cur.execute("PRAGMA table_info(Activities)")
-    #print("Schema:", db.cur.fetchall())
-
-    #db.cur.execute("SELECT * FROM Activities WHERE date_val = ?", (curdate,))
-    #print("Row before update:", db.cur.fetchone())
     return
 
 def modify_resistance(curdate):
@@ -144,18 +139,6 @@ def add_daily_xp():
 def add_weekly_task_xp():
     db.cur.execute("UPDATE UserData SET experience = experience + 10")
     db.conn.commit()
-def add_daily_task_weekly_bonus(week):
-    if week > 3:
-        db.cur.execute("UPDATE UserData SET experience = experience + 30")
-    else:
-        db.cur.execute("UPDATE UserData SET experience = experience + 15")
-    db.conn.commit()
-def add_weekly_task_weekly_bonus(week):
-    if week > 3:
-        db.cur.execute("UPDATE UserData SET experience = experience + 50")
-    else:
-        db.cur.execute("UPDATE UserData SET experience = experience + 30")
-    db.conn.commit()
 
  #Experience losses (currently only if a mistake was made and something done is now undone):
 def remove_daily_xp():
@@ -164,17 +147,61 @@ def remove_daily_xp():
 def remove_weekly_task_xp():
     db.cur.execute("UPDATE UserData SET experience = experience - 10")
     db.conn.commit()
-def remove_daily_task_weekly_bonus(week):
-    if week > 3:
-        db.cur.execute("UPDATE UserData SET experience = experience - 30")
-    else:
-        db.cur.execute("UPDATE UserData SET experience = experience - 15")
-    db.conn.commit()
-def remove_weekly_task_weekly_bonus(week):
-    if week > 3:
-        db.cur.execute("UPDATE UserData SET experience = experience - 50")
-    else:
-        db.cur.execute("UPDATE UserData SET experience = experience - 30")
-    db.conn.commit()
 
-# db.cur.execute("INSERT INTO UserData (name) VALUES (?)", (name,))
+class WeeklyBonus:
+    def __init__(self, db):
+        self.db = db
+
+    def flag_week_for_recalc(self, date):
+        week_start = self.get_week_start(date)
+        db.cur.execute("""
+            INSERT OR IGNORE INTO WeeklyBonusStatus (week_start)
+            VALUES (?)
+        """, (week_start,))
+
+        db.cur.execute("""
+            UPDATE WeeklyBonusStatus
+            SET needs_recalc = 1
+            WHERE week_start = ?
+        """, (week_start,))
+        db.conn.commit()
+
+    def get_week_start(date):
+        return date - timedelta(days=date.weekday())
+    
+    def evaluate_all_weeks(self):
+        ...
+
+    def evaluate_week(self, week_start):
+        ...
+
+    def weekly_requirements_met(self, week_start, task_name):
+        ...
+
+    def award_bonus(self, task_name, week_start):
+        ...
+
+    def add_daily_task_weekly_bonus(weekNumber):
+        if weekNumber > 3:
+            db.cur.execute("UPDATE UserData SET experience = experience + 30")
+        else:
+            db.cur.execute("UPDATE UserData SET experience = experience + 15")
+        db.conn.commit()
+    def add_weekly_task_weekly_bonus(weekNumber):
+        if weekNumber > 3:
+            db.cur.execute("UPDATE UserData SET experience = experience + 50")
+        else:
+            db.cur.execute("UPDATE UserData SET experience = experience + 30")
+        db.conn.commit()
+    def remove_daily_task_weekly_bonus(week):
+        if week > 3:
+            db.cur.execute("UPDATE UserData SET experience = experience - 30")
+        else:
+            db.cur.execute("UPDATE UserData SET experience = experience - 15")
+        db.conn.commit()
+    def remove_weekly_task_weekly_bonus(week):
+        if week > 3:
+            db.cur.execute("UPDATE UserData SET experience = experience - 50")
+        else:
+            db.cur.execute("UPDATE UserData SET experience = experience - 30")
+        db.conn.commit()
