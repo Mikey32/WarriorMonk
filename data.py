@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path 
 from models.ActivityRow import ActivityRow
 from models.UserData import UserData
+from datetime import date, timedelta
 
 class ActivityDB:
     def __init__(self, db_name="activity.db"):
@@ -57,8 +58,7 @@ class ActivityDB:
             CREATE TABLE IF NOT EXISTS UserData(
                 name TEXT,
                 experience INTEGER DEFAULT 0,
-                level INTEGER DEFAULT 0,
-                last_weekly_bonus TEXT            
+                level INTEGER DEFAULT 0     
                 )
                 """)
         
@@ -72,9 +72,6 @@ class ActivityDB:
         """Metric_based: Strength, Endurance, Agility
            Behavior_based: Disciplinie, Focus
            Hybrid: Constitution, Vitality, Dexterity"""
-
-        
-
         #Levels
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS Levels(
@@ -83,7 +80,6 @@ class ActivityDB:
                 point_threshold INTEGER
                 )
                 """)
-        
         #WeeklyBonus
         self.cur.execute("""
             CREATE TABLE IF NOT EXISTS WeeklyBonusStatus (
@@ -92,8 +88,8 @@ class ActivityDB:
                 needs_recalc INTEGER DEFAULT 0
                 )
                 """)
-
         self.conn.commit()
+
     def insert_activity(self, activity: ActivityRow):
         self.cur.execute(f"""
             INSERT INTO Activities ({", ".join(ActivityRow.columns())})
@@ -101,9 +97,37 @@ class ActivityDB:
         """, activity.to_tuple())
 
         self.conn.commit()
+
     def get_activity(self, date_val):
         self.cur.execute("SELECT * FROM Activities WHERE date_val = ?", (date_val,))
         row = self.cur.fetchone()
+        if row is None:
+            # Use defaults for a brand new day
+            default_values = {
+                "date_val": date_val,
+                "sleep": "unknown",
+                "resistance": False,
+                "steps": 0,
+                "sauna": False,
+                "cold_plunge": False,
+                "sprint": False,
+                "zone2cardio": 0,
+                "meditation": 0,
+                "hiit": 0,
+                "mobility": False
+                }   
+             # Insert into DB
+            self.cur.execute("""
+                INSERT INTO Activities (
+                    date_val, sleep, resistance, steps, sauna,
+                    cold_plunge, sprint, zone2cardio, meditation,
+                    hiit, mobility
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, tuple(default_values.values()))
+            self.conn.commit()
+
+
+            return ActivityRow.from_sqlite_row(None, default_values=default_values)
         return ActivityRow.from_sqlite_row(row)
     
     def get_user_data(self):
@@ -139,6 +163,21 @@ class ActivityDB:
             (7, "Vitality"),
             (8, "Dexterity"),
         ]
+        #Seeding the weekly bonus table
+        start_date=date(2025, 12, 1)
+        end_date = date.today()
+   
+        start_monday = start_date - timedelta(days=start_date.weekday())
+        
+
+        current = start_monday
+        while current <= end_date:
+            self.cur.execute("""
+                INSERT OR IGNORE INTO WeeklyBonusStatus (week_start)
+                VALUES (?)
+            """, (current.isoformat(),))
+            current += timedelta(days=7)
+
 
         # Check if Levels table already has data
         self.cur.execute("SELECT COUNT(*) FROM Levels")

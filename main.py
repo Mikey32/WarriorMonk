@@ -33,22 +33,24 @@ def greet_user(activity):
     userInput = input("Please enter your choice: ")
     return userInput
 
-def display_level(userData):
-    updated_user, rank_title = check_for_promotion(userData)
-    print(f"You are level {updated_user.level}. Youre rank is {rank_title}.")
+def display_level(userData, experience):
+    updated_user, rank_title = check_for_promotion(userData, experience)
+    print(f"You are level {updated_user.level}. Youre rank is {rank_title}. You have {experience} experience points.")
 
-def check_for_promotion(userData):
+def check_for_promotion(userData, experience):
     #Check level based on xp?
+    
     db.cur.execute("""
                     SELECT level_number, name
                     FROM Levels
-                    WHERE point_threshold <= (
-                        SELECT experience FROM UserData
-                        )
-                        ORDER BY point_threshold DESC
-                        LIMIT 1;
-                        """)
-    level_number, rank_title = db.cur.fetchone()
+                    WHERE point_threshold <= ?
+                    ORDER BY point_threshold DESC
+                    LIMIT 1
+                """, (experience,))
+    row = db.cur.fetchone()
+    if row is None:
+        return userData, userData.rank_title # no promotion possible    
+    level_number, rank_title = row
     if level_number > userData.level:
         print(f"Congratulations {userData.name}! Welcome to level {level_number}. Your rank is {rank_title}.")
         db.cur.execute("""
@@ -74,12 +76,19 @@ def main():
         name = input("Welcome to the beginning of your journey of becoming a world class Warrior / Monk. Please enter what you would like to be called: ")
         db.cur.execute("INSERT INTO UserData (name) VALUES (?)", (name,))
         db.conn.commit()
+        db.cur.execute("SELECT name, level, experience FROM UserData LIMIT 1")
+        userRow = db.cur.fetchone()
+        userData = UserData.from_sqlite_row(userRow)
     else:
 
         db.cur.execute("SELECT name, level, experience FROM UserData LIMIT 1")
         userRow = db.cur.fetchone()
         userData = UserData.from_sqlite_row(userRow)
-        name = UserData.name
+        name = userData.name
+        #Calculate weekly bonuses!
+        WeeklyBonus.evaluate_all_weeks(db)
+    
+    
 
     #Display current date and what has been accomplished.
     #Set values
@@ -99,7 +108,6 @@ def main():
     "mobility": False
     }   
 
-    
     # Check if today's date exists in the database:
     db.cur.execute("SELECT * FROM Activities WHERE date_val = ?", (today,))
     row = db.cur.fetchone()
@@ -111,17 +119,20 @@ def main():
         activity = ActivityRow.from_sqlite_row(row, default_values)
 
     print("Good Day " + str(name) + ". Today is " + str(today))
-   
-    display_level(userData)    
+
+    db.cur.execute("SELECT SUM(bonus_awarded) FROM WeeklyBonusStatus")
+    row = db.cur.fetchone()[0]
+    bonus_xp = row if row is not None else 0
+
+    experience_actual = userData.experience + bonus_xp
+    display_level(userData, experience_actual)    
 
     userNumber = greet_user(activity)
-    check_weekly = False
         
     while int(userNumber) > 0:
-        value = modify_activity(userNumber, today, check_weekly)
+        value = modify_activity(userNumber, today)
         if value == 11:
             today = input("Please enter the new day YYYY-MM-DD: ")
-            check_weekly = True
         activity = db.get_activity(today)
         userNumber = greet_user(activity)
 
@@ -138,6 +149,5 @@ if __name__ == "__main__":
         print("Database seeded.")
         exit(0)
 
-    # Normal app flow continues here
 
     main()
